@@ -19,6 +19,7 @@
 
 package org.jboss.as.console.client.core;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
@@ -27,6 +28,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.http.client.UrlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.DeckPanel;
@@ -36,6 +38,7 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.LayoutPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.Window;
 import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.proxy.PlaceRequest;
 import org.jboss.as.console.client.Console;
@@ -173,11 +176,33 @@ public class Header implements ValueChangeHandler<String> {
 
         }
 
+        SafeHtmlBuilder html = new SafeHtmlBuilder();
+        html.appendHtmlConstant("<div class='header-link-label'>");
+        html.appendHtmlConstant(Console.CONSTANTS.common_label_logout());
+        html.appendHtmlConstant("</div>");
+        HTML widget = new HTML(html.toSafeHtml());
+        widget.setStyleName("fill-layout");
+        widget.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                clearMsie();
+                Window.Location.replace("/logout");
+            }
+        });
+        linksPane.add(widget, "header-logout");
+
         //subnavigation = createSubnavigation();
         //linksPane.add(subnavigation, "subnavigation");
 
         return linksPane;
     }
+
+   public static native String clearMsie() /*-{
+        try {
+            document.execCommand('ClearAuthenticationCache');
+        } catch (error) {
+        }
+   }-*/;
 
     private String createLinks() {
 
@@ -191,12 +216,14 @@ public class Header implements ValueChangeHandler<String> {
             headerString.appendHtmlConstant("<tr id='header-links-ref'>");
 
             headerString.appendHtmlConstant("<td><img src=\"images/blank.png\" width=1/></td>");
+
+            final String styleAtt = "vertical-align:middle; text-align:center";
+            final String styleClass = "header-link";
+
             for (String[] section : sections) {
 
                 final String name = section[0];
                 final String id = "header-" + name;
-                String styleClass = "header-link";
-                String styleAtt = "vertical-align:middle; text-align:center";
 
                 String td =  "<td style='"+styleAtt+"' id='" + id +"' class='"+styleClass+"'></td>";
 
@@ -206,7 +233,8 @@ public class Header implements ValueChangeHandler<String> {
                 //headerString.appendHtmlConstant("<td ><img src=\"images/blank.png\" width=1 height=32/></td>");
 
             }
-
+            // Add Logout Link
+            headerString.appendHtmlConstant("<td style='"+styleAtt+"'id='header-logout' class='"+styleClass+"'></td>");
             headerString.appendHtmlConstant("</tr>");
             headerString.appendHtmlConstant("</table>");
             headerString.appendHtmlConstant("<div id='subnavigation' style='float:right;clear:right;'/>");
